@@ -34,7 +34,7 @@ Running a second foreground instance on the same port will conflict with an acti
 Rerun the installer to update; include `--service` to restart a running service with the new binary. Service configuration and saved app settings are preserved. To pin a version or choose a directory:
 
 ```sh
-sh /tmp/bndr-install.sh --version v0.1.1 --bin-dir /absolute/path/to/bin
+sh /tmp/bndr-install.sh --version v0.2.0 --bin-dir /absolute/path/to/bin
 ```
 
 To uninstall the binary and user service, keeping names, hidden settings and service configuration:
@@ -48,7 +48,7 @@ Use the same `--bin-dir` when uninstalling a custom installation. Offline instal
 For a private repository, authenticate with GitHub CLI and download the release first:
 
 ```sh
-gh release download v0.1.1 --repo tonyrowles/bndr --dir /tmp/bndr-release --pattern 'bndr_linux_*.tar.gz' --pattern SHA256SUMS --pattern install.sh
+gh release download v0.2.0 --repo tonyrowles/bndr --dir /tmp/bndr-release --pattern 'bndr_linux_*.tar.gz' --pattern SHA256SUMS --pattern install.sh
 sh /tmp/bndr-release/install.sh --archive /tmp/bndr-release/bndr_linux_amd64.tar.gz
 ```
 
@@ -112,13 +112,19 @@ Existing Chromium downloads in `~/.cache/ms-playwright` are also detected, so an
 
 Without a browser, discovery, names, hidden cards and forwarding still work; thumbnail cards explain that Chromium is needed. Thumbnails use [chromedp](https://github.com/chromedp/chromedp) to control Chromium over a private pipe, without a browser debugging port on the network.
 
+## Dashboard themes
+
+The header’s **Theme** control offers **System**, **Light**, and **Dark**. System follows the device’s appearance setting, including changes while the page is open. An explicit selection is saved in that browser and applies on the next visit. App settings continue to be saved on the dev machine.
+
+The dashboard opens directly to the app list. Filter by name, port, or address; open an app from its title, thumbnail, or **Open app** button. The copy icon copies the LAN URL. The **App options** menu contains rename and hide/restore actions.
+
 ## Names, previews and hidden apps
 
-Each card has **Rename** and **Hide app** controls. Custom names and hidden settings are saved on the dev machine in `apps.json` inside the data directory and survive bndr and app restarts. Clear the custom name or choose **Use automatic name** to follow the page title again.
+Each card’s **App options** menu has **Rename** and **Hide app** controls. Custom names and hidden settings are saved on the dev machine in `apps.json` inside the data directory and survive bndr and app restarts. Clear the custom name or choose **Use page title**, then save, to follow the page title again.
 
 Settings are keyed by port: if a different project later uses that port, it inherits those settings. Apps that move to a new port get new settings.
 
-**Hidden apps** shows hidden cards with a **Restore app** action, including saved entries for apps that are currently offline. Hiding only changes the dashboard; it does not stop the app or disable LAN access. Use `BNDR_EXCLUDE` to prevent exposure of a port. Hidden apps do not get screenshot captures.
+The **Hidden** tab shows hidden cards with a **Restore app** action, including saved entries for apps that are currently offline. Hiding only changes the dashboard; it does not stop the app or disable LAN access. Use `BNDR_EXCLUDE` to prevent exposure of a port. Hidden apps do not get screenshot captures.
 
 HTML apps get cached JPEG screenshots captured on the dev machine, with one shared headless Chromium browser and one page at a time. Captures refresh about once a minute; they are not interactive embedded pages. Each capture uses an isolated browser context without your usual browser's login cookies. Pages requiring login may show their login screen. Non-HTML services and capture failures show a fallback card. If Chromium is missing, the dashboard and app forwarding still work and the preview indicates that Chromium needs to be installed. Screenshots are held in memory and discarded when apps disappear or are hidden.
 
@@ -140,7 +146,7 @@ go test -race ./...
 go vet ./...
 ```
 
-Tests cover Linux socket parsing, HTTP forwarding, upgrade tunneling, title parsing, concurrent preference updates, persistence across restart, hide/restore including offline entries, API validation, real screenshot capture, checksum failure, installer upgrades, online release selection, user-service generation, and uninstall preservation. The real screenshot integration test runs when Chromium is available and otherwise reports a skip. The screenshot test disables the browser sandbox for compatibility with isolated CI environments; normal operation uses Chromium’s default sandbox.
+Tests cover Linux socket parsing, HTTP forwarding, upgrade tunneling, title parsing, concurrent preference updates, persistence across restart, hide/restore including offline entries, API validation, real screenshot capture, checksum failure, installer upgrades, online release selection, user-service generation, uninstall preservation, theme persistence, and keeping keyboard focus and drafts intact during dashboard polling. The real screenshot integration test runs when Chromium is available and otherwise reports a skip. The screenshot test disables the browser sandbox for compatibility with isolated CI environments; normal operation uses Chromium’s default sandbox.
 
 ## Migration from Node
 
@@ -149,7 +155,7 @@ Existing `apps.json` settings are read directly with no conversion. Custom names
 ## Build and publish a release
 
 ```sh
-make release VERSION=v0.1.1
+make release VERSION=v0.2.0
 ```
 
 This creates static Linux x86-64 and ARM64 archives, the installer, and `SHA256SUMS` in `dist/`. Archives include the embedded dashboard, README and dependency notices. Check a local package without changing your main installation:
@@ -162,8 +168,8 @@ sh install.sh --archive dist/bndr_linux_amd64.tar.gz --bin-dir /tmp/bndr-release
 The release workflow runs tests and the race detector, builds both architectures, smoke-tests the installer, and publishes the assets when a version tag is pushed to GitHub. After committing and pushing the code, a maintainer can publish with:
 
 ```sh
-git tag v0.1.1
-git push origin v0.1.1
+git tag v0.2.0
+git push origin v0.2.0
 ```
 
-Tags such as `v0.1.1-rc.1` create prereleases, which the default installer skips. A specific prerelease can be installed with `--version`. The default online installer requires a stable release in a public repository; use the authenticated download method above for a private repository.
+Tags such as `v0.2.0-rc.1` create prereleases, which the default installer skips. A specific prerelease can be installed with `--version`. The default online installer requires a stable release in a public repository; use the authenticated download method above for a private repository.
