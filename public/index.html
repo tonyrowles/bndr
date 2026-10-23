@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>bndr · Your local workspace</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui,sans-serif;background:#101311;color:#edf1ea}*{box-sizing:border-box}body{margin:0}main{max-width:1180px;margin:auto;padding:36px 32px}header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #30382e;padding-bottom:26px}.logo{font-size:32px;font-weight:850;letter-spacing:-2px}.logo span{color:#c7f58b}.pill{border:1px solid #3d4935;border-radius:30px;padding:9px 14px;color:#c7f58b;font-size:12px}.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#c7f58b;margin-right:8px}section{padding:64px 0 30px}.eyebrow{font-size:11px;letter-spacing:2px;color:#a3b593;text-transform:uppercase}h1{font-size:clamp(34px,6vw,56px);letter-spacing:-2px;margin:15px 0}p{color:#a0aa9b;line-height:1.6}.toolbar{display:flex;align-items:center;justify-content:space-between;gap:20px;margin:30px 0 24px}.toolbar h2{font-size:16px;font-weight:500}#count{color:#929f89;margin-left:8px}input{background:#191e17;border:1px solid #36402e;border-radius:8px;padding:12px 16px;color:#edf1ea;width:260px;font:inherit;font-size:13px}input:focus{outline:2px solid #c7f58b}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}.card{background:#1a2018;border:1px solid #35402e;border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:18px}.top{display:flex;justify-content:space-between;align-items:center}.icon{background:#303e23;color:#c7f58b;padding:12px;border-radius:10px;font-family:monospace;font-size:18px}.badge{font-size:10px;color:#bdd2ab;text-transform:uppercase;letter-spacing:1px}.card h3{margin:3px 0 7px;font-size:21px;letter-spacing:-.5px}.address{font:12px ui-monospace,monospace;color:#9ba88f;overflow-wrap:anywhere}.actions{display:flex;gap:8px;margin-top:6px}a,button{border:1px solid #46563a;border-radius:6px;padding:10px 14px;font:inherit;font-size:12px;cursor:pointer;text-decoration:none}a{flex:1;color:#17200f;background:#c7f58b;border-color:#c7f58b;font-weight:650}button{background:transparent;color:#c7f58b}a:hover,button:hover{filter:brightness(1.15)}.empty{padding:50px 22px;border:1px dashed #3b4633;border-radius:12px;text-align:center;color:#a5b19b;grid-column:1/-1}.empty strong{display:block;color:#e1e8db;font-size:20px;margin-bottom:12px}footer{border-top:1px solid #30382e;margin-top:60px;padding-top:20px;display:flex;justify-content:space-between;gap:20px;font:11px ui-monospace,monospace;color:#88977d}.error{color:#ffc79b;font-size:12px}#notice{color:#ffc79b}@media(max-width:600px){main{padding:24px 18px}section{padding-top:40px}.toolbar{align-items:start;flex-direction:column}input{width:100%}footer{flex-direction:column}header .pill{font-size:10px}}
+
+.preview{aspect-ratio:8/5;margin:-24px -24px 0;background:linear-gradient(135deg,#293521,#141a12);overflow:hidden;border-radius:11px 11px 0 0;position:relative;border-bottom:1px solid #35402e;display:grid;place-items:center}.preview img{width:100%;height:100%;object-fit:cover}.preview-label{display:flex;flex-direction:column;align-items:center;gap:12px;color:#a8ba99;font-size:12px}.monogram{font-size:44px;color:#c7f58b;opacity:.7;font-weight:650}.card h3{overflow-wrap:anywhere}.actions{flex-wrap:wrap}.secondary{display:flex;gap:8px}.secondary button{font-size:11px;padding:7px 10px;color:#a8ba99}.tabs{display:flex;align-items:center;gap:10px}.tabs button{color:#a8ba99}.tabs button[aria-pressed=true]{color:#c7f58b;background:#293521;border-color:#738c57}.source{font-size:11px;color:#91a283;margin-top:8px}.toolbar{flex-wrap:wrap}dialog{background:#1a2018;color:#edf1ea;border:1px solid #46563a;border-radius:12px;padding:28px;max-width:440px;width:calc(100% - 36px)}dialog::backdrop{background:#0009}dialog h2{margin-top:0}dialog input{width:100%;margin:10px 0 16px}dialog label{font-size:13px;color:#a8ba99}.dialog-actions{display:flex;gap:8px;flex-wrap:wrap}.save{background:#c7f58b;color:#17200f}#rename-error{color:#ffc79b;font-size:12px}.offline{opacity:.75}.tabs h2{white-space:nowrap}
+</style></head><body><main>
+<header><div class="logo">bndr<span>↗</span></div><div class="pill" id="status"><span class="dot"></span>Connecting</div></header>
+<section><div class="eyebrow">Local development, untethered</div><h1>Your workspace.<br>Everywhere on your LAN.</h1><p>Live apps from your dev machine, ready to open on any nearby device.</p></section>
+<div id="notice" role="status"></div><div class="toolbar"><div class="tabs"><h2>Apps <span id="count">0</span></h2><button id="visible-tab" aria-pressed="true">Running</button><button id="hidden-tab" aria-pressed="false">Hidden apps</button></div><input id="filter" type="search" placeholder="Filter by name, port or address…" aria-label="Filter apps"></div>
+<div class="grid" id="apps"></div><footer><span id="machine">Discovering your machine…</span><span id="updated">Watching Linux listening sockets · every 3s</span></footer>
+</main>
+<dialog id="rename-dialog"><form id="rename-form"><h2>Name this app</h2><label for="app-name">Custom name · leave blank to use the automatic name</label><input id="app-name" maxlength="120" autocomplete="off"><div id="rename-error" role="alert"></div><div class="dialog-actions"><button class="save" type="submit">Save name</button><button id="reset-name" type="button">Use automatic name</button><button id="cancel-name" type="button">Cancel</button></div></form></dialog>
+<script>
+let current=[], saved=[], showingHidden=false, editingPort=null;
+const el=id=>document.getElementById(id);
+async function updateApp(port,patch){
+ const response=await fetch('/api/apps/'+port,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(patch)});
+ if(!response.ok)throw Error(await response.text() || 'Could not save app settings');
+ await load();
+}
+function button(label,action){const node=document.createElement('button');node.type='button';node.textContent=label;node.onclick=action;return node;}
+function render(){
+ const query=el('filter').value.toLowerCase();
+ const candidates=showingHidden?[...current.filter(a=>a.hidden),...saved]:current.filter(a=>!a.hidden);
+ const apps=candidates.filter(a=>[a.name,a.autoName,a.upstream,a.url,a.port].join(' ').toLowerCase().includes(query));
+ el('count').textContent=current.filter(a=>!a.hidden).length;
+ el('hidden-tab').textContent='Hidden apps ('+(current.filter(a=>a.hidden).length+saved.length)+')';
+ el('visible-tab').setAttribute('aria-pressed',!showingHidden);el('hidden-tab').setAttribute('aria-pressed',showingHidden);
+ el('apps').replaceChildren();
+ if(!apps.length){const empty=document.createElement('div');empty.className='empty';const strong=document.createElement('strong');strong.textContent=query?'No matching apps':showingHidden?'No hidden apps':'Listening for your next idea';empty.append(strong,query?'Try another name, port or address.':showingHidden?'Apps you hide will appear here, ready to restore.':'Start a local HTTP server. It will appear here automatically.');el('apps').append(empty);return;}
+ for(const app of apps){
+  const card=document.createElement('article');card.className='card'+(app.offline?' offline':'');card.dataset.port=app.port;
+  card.innerHTML='<div class="preview"><div class="preview-label"><span class="monogram"></span><span class="preview-message"></span></div></div><div class="top"><span class="badge"></span><span class="address"></span></div><div><h3></h3><div class="address url"></div><div class="source"></div></div><div class="actions"></div><div class="secondary"></div>';
+  card.querySelector('.monogram').textContent=app.name.split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase() || '</>';
+  const preview=app.preview;
+  card.querySelector('.preview-message').textContent=app.offline?'App is offline':app.hidden?'Preview paused while hidden':preview?.status==='queued'||preview?.status==='capturing'?'Capturing preview…':preview?.error || 'No page preview available';
+  if(preview?.status==='ready' && !app.hidden){
+   const image=document.createElement('img');image.alt='Preview of '+app.name;image.loading='lazy';image.src='/api/apps/'+app.port+'/preview?v='+preview.version;
+   image.onerror=()=>image.remove();card.querySelector('.preview').append(image);card.querySelector('.preview-label').style.position='absolute';image.style.position='relative';
+  }
+  card.querySelector('.badge').textContent=app.offline?'Offline':app.error?'Unavailable':app.mode==='proxy'?'LAN bridge':'On your LAN';
+  card.querySelector('.top .address').textContent=':'+app.port;
+  card.querySelector('h3').textContent=app.name;
+  card.querySelector('.url').textContent=app.url || 'Saved settings for port '+app.port;
+  card.querySelector('.source').textContent=app.customName?'Custom name':app.autoName && app.autoName!=='App on '+app.port?'Named from page title':'No page title detected';
+  if(app.error){const error=document.createElement('div');error.className='error';error.textContent=app.error;card.append(error);}
+  else if(!app.offline){
+   const link=document.createElement('a');link.href=app.url;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Open app ↗';
+   const copy=button('Copy URL',async()=>{try{await navigator.clipboard.writeText(app.url);copy.textContent='Copied';}catch{window.prompt('Copy app URL',app.url);}});
+   card.querySelector('.actions').append(link,copy);
+  }
+  card.querySelector('.secondary').append(button('Rename',()=>{
+   editingPort=app.port;el('app-name').value=app.customName ?? (app.offline?app.name:'');el('app-name').placeholder=app.autoName || 'App on '+app.port;el('rename-error').textContent='';el('rename-dialog').showModal();el('app-name').focus();
+  }),button(app.hidden?'Restore app':'Hide app',async()=>{try{await updateApp(app.port,{hidden:!app.hidden});}catch(error){el('notice').textContent=error.message;}}));
+  el('apps').append(card);
+ }
+}
+async function load(){
+ const response=await fetch('/api/apps');if(!response.ok)throw Error('Dashboard unavailable');const data=await response.json();current=data.apps;saved=data.savedApps || [];render();el('status').textContent='● Watching your network';el('machine').textContent=data.lan+' · port '+data.port;el('notice').textContent=data.error?'Discovery error: '+data.error:'';
+}
+async function refresh(){try{await load();}catch{el('status').textContent='○ Reconnecting';el('notice').textContent='Connection lost. App links may be out of date.';}finally{setTimeout(refresh,3000);}}
+el('visible-tab').onclick=()=>{showingHidden=false;render();};el('hidden-tab').onclick=()=>{showingHidden=true;render();};
+el('cancel-name').onclick=()=>el('rename-dialog').close();el('reset-name').onclick=()=>{el('app-name').value='';el('rename-form').requestSubmit();};
+el('rename-form').onsubmit=async event=>{event.preventDefault();try{await updateApp(editingPort,{name:el('app-name').value});el('rename-dialog').close();}catch(error){el('rename-error').textContent=error.message;}};
+el('filter').addEventListener('input',render);render();refresh();
+</script></body></html>

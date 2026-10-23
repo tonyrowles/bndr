@@ -1,0 +1,54 @@
+name: Release
+on:
+  push:
+    tags:
+      - 'v*'
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Test and inspect
+        run: |
+          go test -race ./...
+          go vet ./...
+          sh -n install.sh scripts/release.sh
+      - name: Build Linux releases
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: ./scripts/release.sh "$VERSION"
+      - name: Smoke test the installer
+        run: |
+          install_root=$(mktemp -d)
+          export XDG_CONFIG_HOME="$install_root/config"
+          export XDG_STATE_HOME="$install_root/state"
+          install_dir="$install_root/bin"
+          sh install.sh --archive dist/bndr_linux_amd64.tar.gz --bin-dir "$install_dir"
+          "$install_dir/bndr" --version
+          sh install.sh --uninstall --bin-dir "$install_dir"
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ github.ref_name }}
+        run: |
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            gh release upload "$VERSION" dist/* --clobber
+          else
+            prerelease=()
+            if [[ "$VERSION" == *-* ]]; then prerelease=(--prerelease); fi
+            gh release create "$VERSION" dist/* --verify-tag --generate-notes "${prerelease[@]}"
+          fi
