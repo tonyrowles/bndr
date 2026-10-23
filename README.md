@@ -34,7 +34,7 @@ Running a second foreground instance on the same port will conflict with an acti
 Rerun the installer to update; include `--service` to restart a running service with the new binary. Service configuration and saved app settings are preserved. To pin a version or choose a directory:
 
 ```sh
-sh /tmp/bndr-install.sh --version v0.1.0 --bin-dir /absolute/path/to/bin
+sh /tmp/bndr-install.sh --version v0.1.1 --bin-dir /absolute/path/to/bin
 ```
 
 To uninstall the binary and user service, keeping names, hidden settings and service configuration:
@@ -48,7 +48,7 @@ Use the same `--bin-dir` when uninstalling a custom installation. Offline instal
 For a private repository, authenticate with GitHub CLI and download the release first:
 
 ```sh
-gh release download v0.1.0 --repo tonyrowles/bndr --dir /tmp/bndr-release --pattern 'bndr_linux_*.tar.gz' --pattern SHA256SUMS --pattern install.sh
+gh release download v0.1.1 --repo tonyrowles/bndr --dir /tmp/bndr-release --pattern 'bndr_linux_*.tar.gz' --pattern SHA256SUMS --pattern install.sh
 sh /tmp/bndr-release/install.sh --archive /tmp/bndr-release/bndr_linux_amd64.tar.gz
 ```
 
@@ -149,7 +149,7 @@ Existing `apps.json` settings are read directly with no conversion. Custom names
 ## Build and publish a release
 
 ```sh
-make release VERSION=v0.1.0
+make release VERSION=v0.1.1
 ```
 
 This creates static Linux x86-64 and ARM64 archives, the installer, and `SHA256SUMS` in `dist/`. Archives include the embedded dashboard, README and dependency notices. Check a local package without changing your main installation:
@@ -162,8 +162,8 @@ sh install.sh --archive dist/bndr_linux_amd64.tar.gz --bin-dir /tmp/bndr-release
 The release workflow runs tests and the race detector, builds both architectures, smoke-tests the installer, and publishes the assets when a version tag is pushed to GitHub. After committing and pushing the code, a maintainer can publish with:
 
 ```sh
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.1.1
+git push origin v0.1.1
 ```
 
-Tags such as `v0.1.0-rc.1` create prereleases, which the default installer skips. A specific prerelease can be installed with `--version`. The default online installer requires a stable release in a public repository; use the authenticated download method above for a private repository.
+Tags such as `v0.1.1-rc.1` create prereleases, which the default installer skips. A specific prerelease can be installed with `--version`. The default online installer requires a stable release in a public repository; use the authenticated download method above for a private repository.
