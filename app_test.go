@@ -145,7 +145,7 @@ func TestRealScreenshotAndBrowserIsolation(t *testing.T) {
 				return
 			}
 			if info.Status == "unavailable" {
-				t.Fatalf("capture failed: %+v", info)
+				t.Fatalf("capture failed using %s: %s", p.executable, *info.Error)
 			}
 			time.Sleep(50 * time.Millisecond)
 		}

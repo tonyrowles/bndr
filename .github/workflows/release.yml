@@ -1,5 +1,6 @@
 name: Release
 on:
+  workflow_dispatch:
   push:
     tags:
       - 'v*'
@@ -22,15 +23,20 @@ jobs:
           go-version-file: go.mod
           cache: true
       - name: Test and inspect
+        env:
+          BNDR_CHROMIUM: /usr/bin/google-chrome
         run: |
+          "$BNDR_CHROMIUM" --version
           go test -race ./...
           go vet ./...
           sh -n install.sh scripts/release.sh
       - name: Build Linux releases
+        if: startsWith(github.ref, 'refs/tags/')
         env:
           VERSION: ${{ github.ref_name }}
         run: ./scripts/release.sh "$VERSION"
       - name: Smoke test the installer
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
           install_root=$(mktemp -d)
           export XDG_CONFIG_HOME="$install_root/config"
@@ -40,6 +46,7 @@ jobs:
           "$install_dir/bndr" --version
           sh install.sh --uninstall --bin-dir "$install_dir"
       - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/')
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}

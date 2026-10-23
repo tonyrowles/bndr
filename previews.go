@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -41,7 +42,7 @@ func findChromium() string {
 	if path := os.Getenv("BNDR_CHROMIUM"); path != "" {
 		return path
 	}
-	for _, name := range []string{"chromium", "chromium-browser", "google-chrome", "google-chrome-stable", "headless_shell"} {
+	for _, name := range []string{"google-chrome", "google-chrome-stable", "chromium", "chromium-browser", "headless_shell"} {
 		if path, err := exec.LookPath(name); err == nil {
 			return path
 		}
@@ -189,6 +190,9 @@ func (p *previews) run() {
 						}
 					}
 				}
+			}
+			if err != nil && p.ctx.Err() == nil {
+				log.Printf("Preview for port %d: %v", port, err)
 			}
 			p.mu.Lock()
 			if p.entries[port] == entry {
