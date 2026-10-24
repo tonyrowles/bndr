@@ -3,8 +3,10 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/base64"
+	"fmt"
 	"net"
 	"net/http"
+	"net/netip"
 	"regexp"
 	"strconv"
 	"strings"
@@ -41,4 +43,59 @@ func dashboardHeaders(w http.ResponseWriter) {
 }
 func dashboardServer(handler http.Handler) *http.Server {
 	return &http.Server{Handler: handler, ReadHeaderTimeout: 10 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 32 << 10}
+}
+
+// boundNetworks uses only address assignments matching the selected bind IP.
+// Other interfaces (including VPNs) do not automatically widen access.
+func boundNetworks(lan string) ([]netip.Prefix, error) {
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		return nil, err
+	}
+	var addresses []string
+	for _, iface := range interfaces {
+		if iface.Flags&net.FlagUp == 0 {
+			continue
+		}
+		assigned, err := iface.Addrs()
+		if err != nil {
+			return nil, fmt.Errorf("read interface %s addresses: %w", iface.Name, err)
+		}
+		for _, address := range assigned {
+			addresses = append(addresses, address.String())
+		}
+	}
+	return networksForAddress(lan, addresses)
+}
+
+func networksForAddress(lan string, addresses []string) ([]netip.Prefix, error) {
+	ip, err := netip.ParseAddr(lan)
+	if err != nil {
+		return nil, fmt.Errorf("invalid bind IP: %w", err)
+	}
+	var result []netip.Prefix
+	for _, address := range addresses {
+		prefix, err := netip.ParsePrefix(address)
+		if err == nil && prefix.Addr() == ip {
+			result = append(result, prefix.Masked())
+		}
+	}
+	if len(result) == 0 {
+		return nil, fmt.Errorf("cannot determine allowed subnet for bind IP %s", lan)
+	}
+	return result, nil
+}
+
+func allowedPeer(remote string, networks []netip.Prefix) bool {
+	peer, err := netip.ParseAddrPort(remote)
+	if err != nil {
+		return false
+	}
+	ip := peer.Addr().Unmap()
+	for _, network := range networks {
+		if network.Contains(ip) {
+			return true
+		}
+	}
+	return false
 }

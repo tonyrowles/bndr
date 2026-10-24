@@ -53,6 +53,10 @@ func run() error {
 	if lan == "" || !slices.Contains(addresses, lan) {
 		return fmt.Errorf("set BNDR_HOST to an IPv4 address assigned to your LAN interface")
 	}
+	networks, err := boundNetworks(lan)
+	if err != nil {
+		return err
+	}
 	port := 4567
 	if raw := os.Getenv("BNDR_PORT"); raw != "" {
 		port, err = strconv.Atoi(raw)
@@ -81,11 +85,12 @@ func run() error {
 	}
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
-	app := newApplication(ctx, lan, port, excluded, prefs)
+	app := newApplication(ctx, lan, port, excluded, prefs, networks)
 	server := dashboardServer(app)
 	serveErr := make(chan error, 1)
 	go func() { serveErr <- server.Serve(listener) }()
 	log.Printf("bndr → http://%s:%d", lan, port)
+	log.Printf("Allowed client networks: %v", networks)
 	scanDone := make(chan struct{})
 	go func() {
 		defer close(scanDone)

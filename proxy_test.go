@@ -43,7 +43,7 @@ func TestBridgeHTTPStreamingAndWebSockets(t *testing.T) {
 	}))
 	defer app.Close()
 	port := localPort(t, app)
-	bridge, err := newBridge("127.0.0.2", "127.0.0.1", port)
+	bridge, err := newBridge("127.0.0.2", "127.0.0.1", port, testNetworks)
 	if err != nil {
 		t.Fatal(err)
 	}

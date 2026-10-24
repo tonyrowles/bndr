@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httputil"
+	"net/netip"
 	"net/url"
 	"strconv"
 	"sync"
@@ -52,7 +53,7 @@ func (l bridgeListener) Accept() (net.Conn, error) {
 	l.owner.connections[tracked] = struct{}{}
 	return tracked, nil
 }
-func newBridge(lan, host string, port int) (*bridge, error) {
+func newBridge(lan, host string, port int, networks []netip.Prefix) (*bridge, error) {
 	listener, err := net.Listen("tcp4", net.JoinHostPort(lan, strconv.Itoa(port)))
 	if err != nil {
 		return nil, err
@@ -68,6 +69,10 @@ func newBridge(lan, host string, port int) (*bridge, error) {
 		},
 	}
 	b.server = &http.Server{Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !allowedPeer(r.RemoteAddr, networks) {
+			http.Error(w, "Client address not allowed", http.StatusForbidden)
+			return
+		}
 		if !validHost(r.Host, lan, port) {
 			http.Error(w, "Host not allowed; use the configured LAN IP address", http.StatusForbidden)
 			return

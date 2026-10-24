@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/netip"
 	"slices"
 	"sort"
 	"strconv"
@@ -32,21 +33,22 @@ type app struct {
 	Offline    bool        `json:"offline,omitempty"`
 }
 type application struct {
-	lan         string
-	port        int
-	excluded    map[int]bool
-	preferences *preferences
-	previews    *previews
-	scanMu      sync.Mutex
-	bridges     map[int]*bridge
-	mu          sync.RWMutex
-	apps        []app
-	lastScan    *time.Time
-	scanError   *string
+	allowedNetworks []netip.Prefix
+	lan             string
+	port            int
+	excluded        map[int]bool
+	preferences     *preferences
+	previews        *previews
+	scanMu          sync.Mutex
+	bridges         map[int]*bridge
+	mu              sync.RWMutex
+	apps            []app
+	lastScan        *time.Time
+	scanError       *string
 }
 
-func newApplication(ctx context.Context, lan string, port int, excluded map[int]bool, prefs *preferences) *application {
-	return &application{lan: lan, port: port, excluded: excluded, preferences: prefs, previews: newPreviews(ctx), bridges: make(map[int]*bridge), apps: []app{}}
+func newApplication(ctx context.Context, lan string, port int, excluded map[int]bool, prefs *preferences, networks []netip.Prefix) *application {
+	return &application{allowedNetworks: slices.Clone(networks), lan: lan, port: port, excluded: excluded, preferences: prefs, previews: newPreviews(ctx), bridges: make(map[int]*bridge), apps: []app{}}
 }
 func (a *application) scan(ctx context.Context) {
 	a.scanMu.Lock()
@@ -128,7 +130,7 @@ func (a *application) scan(ctx context.Context) {
 	next := make([]app, 0, len(found))
 	for port, app := range found {
 		if !app.Direct && a.bridges[port] == nil {
-			bridge, err := newBridge(a.lan, app.Host, port)
+			bridge, err := newBridge(a.lan, app.Host, port, a.allowedNetworks)
 			if err != nil {
 				message := err.Error()
 				app.Error = &message
@@ -168,6 +170,10 @@ func (a *application) Close() {
 }
 func (a *application) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	dashboardHeaders(w)
+	if !allowedPeer(r.RemoteAddr, a.allowedNetworks) {
+		http.Error(w, "Client address not allowed", http.StatusForbidden)
+		return
+	}
 	if !validHost(r.Host, a.lan, a.port) {
 		http.Error(w, "Host not allowed; use the configured LAN IP address", http.StatusForbidden)
 		return

@@ -14,7 +14,7 @@ func TestDashboardRejectsUntrustedHost(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	a := newApplication(context.Background(), "192.168.1.50", 4000, nil, prefs)
+	a := newApplication(context.Background(), "192.168.1.50", 4000, nil, prefs, testNetworks)
 	defer a.Close()
 	a.apps = []app{{Port: 8765}}
 	for _, path := range []string{"/", "/api/apps", "/api/apps/8765/preview"} {
@@ -43,7 +43,7 @@ func TestBridgeRejectsUntrustedHost(t *testing.T) {
 	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { fmt.Fprint(w, "private fixture") }))
 	defer upstream.Close()
 	port := localPort(t, upstream)
-	b, err := newBridge("127.0.0.2", "127.0.0.1", port)
+	b, err := newBridge("127.0.0.2", "127.0.0.1", port, testNetworks)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,7 +65,7 @@ func TestDashboardSecurityHeadersAndTimeouts(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	a := newApplication(context.Background(), "192.168.1.50", 4000, nil, prefs)
+	a := newApplication(context.Background(), "192.168.1.50", 4000, nil, prefs, testNetworks)
 	defer a.Close()
 	response := api(t, a, "GET", "/", "")
 	if response.Code != 200 {

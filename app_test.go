@@ -45,7 +45,7 @@ func TestDiscoverySettingsAndOfflineRestore(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	a := newApplication(ctx, "127.0.0.2", 4000, excluded, prefs)
+	a := newApplication(ctx, "127.0.0.2", 4000, excluded, prefs, testNetworks)
 	defer a.Close()
 	a.scan(ctx)
 	var data struct {
@@ -100,7 +100,7 @@ func TestDiscoverySettingsAndOfflineRestore(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	a = newApplication(ctx, "127.0.0.2", 4000, excluded, reloaded)
+	a = newApplication(ctx, "127.0.0.2", 4000, excluded, reloaded, testNetworks)
 	defer a.Close()
 	a.scan(ctx)
 	decode()

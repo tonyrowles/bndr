@@ -78,7 +78,7 @@ func TestDashboardContentSecurityPolicy(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	a := newApplication(context.Background(), "127.0.0.1", 4000, nil, prefs)
+	a := newApplication(context.Background(), "127.0.0.1", 4000, nil, prefs, testNetworks)
 	defer a.Close()
 	server := httptest.NewServer(a)
 	defer server.Close()

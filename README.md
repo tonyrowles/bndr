@@ -137,6 +137,12 @@ HTML apps get cached JPEG screenshots captured on the dev machine, with one shar
 
 bndr reads `/proc/net/tcp` and `/proc/net/tcp6` in its current network namespace and probes HTTP `/` with a one-second timeout every three seconds. Any HTTP response qualifies, including login pages and errors. It does not depend on which agent or terminal started the process. Apps are automatically named from their HTML page title, including client-rendered titles once a preview is captured. Apps without titles fall back to a port label. The dashboard does not depend on agent-specific integration.
 
+Client access to the dashboard, API, previews, and bndr-managed bridges is restricted by default to the subnet(s) assigned to the exact IP bndr binds to. For example, binding to `192.168.1.50/24` allows `192.168.1.0/24`; other local interfaces and private networks are not automatically trusted. bndr checks the connection’s source IP, ignores forwarded-IP headers, logs the allowed networks at startup, and refuses to start if it cannot determine the bound address’s subnet. Restart bndr after changing the interface address or netmask.
+
+A Tailscale subnet router using source NAT can provide remote access: bndr sees the router’s LAN source address, and Tailscale policies should control access to that route. Without source NAT, a remote tailnet source address outside the bound subnet is denied. Binding directly to a Tailscale `/32` address does not allow other tailnet addresses.
+
+This restriction applies only to listeners managed by bndr. Apps already listening directly on the LAN remain subject to their own access controls. Source-subnet checks do not authenticate users and cannot distinguish LAN clients from traffic that another device translates to an allowed source address; a host firewall remains useful.
+
 The dashboard and bndr-managed bridges accept only their configured LAN IP and port in the HTTP Host header. Access through custom DNS names, reverse proxies that preserve a different Host, or the wrong port is rejected. This limits DNS rebinding; it does not authenticate LAN clients. Already-public apps linked directly by bndr retain their own security behavior.
 
 Screenshot requests are filtered to the captured app’s exact scheme, literal IP address, and port. Other ports, hostnames, external sites, off-origin redirects, and off-origin frame/resource requests are blocked. A preview-only Content Security Policy also restricts connections and disables workers, popups, forms, plugins, and downloads. The app’s existing enforcing CSP is retained. These restrictions do not change the app served through its normal LAN link.
@@ -145,7 +151,7 @@ Local scripts, styles, images, and same-origin API calls can render. External CD
 
 This is browser-level request filtering, not an OS-enforced network sandbox. It does not contain browser exploits or provide complete control over browser-internal networking or protocols such as WebRTC. For untrusted app content, use `BNDR_PREVIEWS=0` or stronger network isolation; keep Chromium sandboxing enabled when previews are used.
 
-**Use on a trusted LAN:** bndr automatically exposes discovered HTTP services, including development admin endpoints, without adding authentication. Use `BNDR_EXCLUDE` for ports you want kept local. It does not modify firewall rules or assign IP addresses.
+**Use on a trusted LAN:** bndr automatically exposes discovered HTTP services, including development admin endpoints, without adding authentication, subject to the source-subnet restriction above for bndr-managed listeners. Use `BNDR_EXCLUDE` for ports you want kept local. It does not modify firewall rules or assign IP addresses.
 
 HTTPS-only services, Unix sockets, other network namespaces and containers without published host ports are outside this first version. IPv6 loopback and wildcard listeners are probed over IPv6 and bridged to IPv4 when possible. Servers with custom Host/Origin checks, hardcoded localhost URLs, secure cookies, absolute redirects or hardcoded WebSocket URLs may need app configuration. HTTP Host is forwarded as `localhost:<port>`; Origin is preserved. Network discovery itself makes a GET request to `/` on candidate ports.
 
