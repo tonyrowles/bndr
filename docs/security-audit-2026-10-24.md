@@ -6,7 +6,7 @@ Date: October 24, 2026. Baseline: commit `778bde7` and the published Linux x86-6
 
 ## Release status
 
-The fixes described as local below are included in the `v0.2.1` security release changes: Host validation, dashboard HTTP/browser hardening, preview request filtering and its disable option, updated Go toolchain, pinned release actions, and vulnerability scan gates. The audit and follow-up sections preserve the findings and verification history before publication. Authentication and HTTPS remain deferred; bndr still requires a trusted LAN. Older release assets are unchanged.
+The fixes described as local below are included in the `v0.2.2` security release changes: Host validation, dashboard HTTP/browser hardening, preview request filtering and its disable option, updated Go toolchain, pinned release actions, and vulnerability scan gates. The audit and follow-up sections preserve the findings and verification history before publication. Authentication and HTTPS remain deferred; bndr still requires a trusted LAN. Older release assets are unchanged.
 
 ## Findings
 

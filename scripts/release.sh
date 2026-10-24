@@ -7,6 +7,8 @@ mkdir -p dist
 work=$(mktemp -d)
 trap 'rm -rf -- "$work"' EXIT
 trap 'exit 1' HUP INT TERM
+# Fetch every module before collecting licenses, including lazy or indirect modules.
+go mod download
 # Include the notices for all modules linked into the release, plus Go's runtime.
 {
     printf 'Go runtime and standard library\n\n'
