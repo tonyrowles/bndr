@@ -53,7 +53,7 @@ func run() error {
 	if lan == "" || !slices.Contains(addresses, lan) {
 		return fmt.Errorf("set BNDR_HOST to an IPv4 address assigned to your LAN interface")
 	}
-	port := 4000
+	port := 4567
 	if raw := os.Getenv("BNDR_PORT"); raw != "" {
 		port, err = strconv.Atoi(raw)
 		if err != nil || port < 1 || port > 65535 {

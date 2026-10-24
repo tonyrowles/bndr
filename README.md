@@ -79,7 +79,9 @@ The LAN address is detected automatically. To select a specific interface:
 BNDR_HOST=192.168.1.50 ./bin/bndr
 ```
 
-Open `http://192.168.1.50:4000` from another device on the same LAN. Assign that address to the dev machine using a DHCP reservation or your Linux network configuration. If `BNDR_HOST` is omitted, bndr selects the first non-loopback IPv4 interface; set it explicitly on machines with VPNs or multiple interfaces.
+The default dashboard port is 4567. To keep an existing dashboard URL after upgrading, set `BNDR_PORT=4000`.
+
+Open `http://192.168.1.50:4567` from another device on the same LAN. Assign that address to the dev machine using a DHCP reservation or your Linux network configuration. If `BNDR_HOST` is omitted, bndr selects the first non-loopback IPv4 interface; set it explicitly on machines with VPNs or multiple interfaces.
 
 Start a local server, for example:
 
@@ -94,7 +96,7 @@ Within a few seconds, the dashboard links to `http://192.168.1.50:8765`. bndr bi
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `BNDR_HOST` | First external IPv4 address | Assigned LAN address for dashboard and bridges |
-| `BNDR_PORT` | `4000` | Dashboard port |
+| `BNDR_PORT` | `4567` | Dashboard port |
 | `BNDR_EXCLUDE` | Empty | Comma-separated ports to skip, e.g. `8080,9090` |
 | `BNDR_DATA_DIR` | `$XDG_STATE_HOME/bndr` or `~/.local/state/bndr` | Directory containing persistent app settings |
 | `BNDR_PREVIEWS` | Enabled | Set to `0` to disable screenshot browsing entirely |
@@ -163,7 +165,7 @@ Tests cover Linux socket parsing, HTTP forwarding, upgrade tunneling, title pars
 
 ## Migration from Node
 
-Existing `apps.json` settings are read directly with no conversion. Custom names and hidden states keep the same port-based identity. The dashboard and `/api/apps` endpoints remain compatible. Stop the Node process before starting the Go binary so it can bind port 4000 and the app bridge ports.
+Existing `apps.json` settings are read directly with no conversion. Custom names and hidden states keep the same port-based identity. The dashboard and `/api/apps` endpoints remain compatible. Stop the Node process before starting the Go binary so it can bind port 4567 and the app bridge ports.
 
 ## Build and publish a release
 

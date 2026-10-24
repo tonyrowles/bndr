@@ -108,7 +108,7 @@ if [ "$service" = yes ]; then
         (umask 077; cat > "$env_file" <<'ENV'
 # Optional bndr settings. Uncomment and edit as needed.
 # BNDR_HOST=192.168.1.50
-# BNDR_PORT=4000
+# BNDR_PORT=4567
 # BNDR_EXCLUDE=8080,9090
 # BNDR_CHROMIUM=/usr/bin/chromium
 # BNDR_PREVIEWS=0
