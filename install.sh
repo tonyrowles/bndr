@@ -111,6 +111,7 @@ if [ "$service" = yes ]; then
 # BNDR_PORT=4000
 # BNDR_EXCLUDE=8080,9090
 # BNDR_CHROMIUM=/usr/bin/chromium
+# BNDR_PREVIEWS=0
 ENV
         )
     fi

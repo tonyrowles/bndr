@@ -36,6 +36,7 @@ type previews struct {
 	cancel     context.CancelFunc
 	done       chan struct{}
 	executable string
+	disabled   bool
 }
 
 func findChromium() string {
@@ -66,7 +67,7 @@ func findChromium() string {
 }
 func newPreviews(parent context.Context) *previews {
 	ctx, cancel := context.WithCancel(parent)
-	p := &previews{entries: make(map[int]*previewEntry), wake: make(chan struct{}, 1), ctx: ctx, cancel: cancel, done: make(chan struct{}), executable: findChromium()}
+	p := &previews{entries: make(map[int]*previewEntry), wake: make(chan struct{}, 1), ctx: ctx, cancel: cancel, done: make(chan struct{}), executable: findChromium(), disabled: os.Getenv("BNDR_PREVIEWS") == "0"}
 	go p.run()
 	return p
 }
@@ -74,7 +75,7 @@ func (p *previews) sync(apps []app) {
 	p.mu.Lock()
 	active := make(map[int]bool)
 	for _, app := range apps {
-		if app.Error != nil || !app.HTML || app.Hidden {
+		if p.disabled || app.Error != nil || !app.HTML || app.Hidden {
 			continue
 		}
 		active[app.Port] = true
@@ -98,6 +99,10 @@ func (p *previews) info(port int) previewInfo {
 	defer p.mu.RUnlock()
 	if entry := p.entries[port]; entry != nil {
 		return entry.previewInfo
+	}
+	if p.disabled {
+		message := "Previews disabled"
+		return previewInfo{Status: "unavailable", Error: &message}
 	}
 	return previewInfo{Status: "unavailable"}
 }
@@ -219,7 +224,11 @@ func (p *previews) run() {
 		}
 	}
 }
-func capture(browser context.Context, url string) ([]byte, string, error) {
+func capture(browser context.Context, url string) (image []byte, title string, err error) {
+	origin, err := parsePreviewOrigin(url)
+	if err != nil {
+		return nil, "", err
+	}
 	tab, closeTab := chromedp.NewContext(browser, chromedp.WithNewBrowserContext())
 	defer closeTab()
 	ctx, cancel := context.WithTimeout(tab, 12*time.Second)
@@ -227,6 +236,22 @@ func capture(browser context.Context, url string) ([]byte, string, error) {
 	if _, err := chromedp.Run(ctx, chromedp.EmulateViewport(1200, 750)); err != nil {
 		return nil, "", err
 	}
+	var filter *previewRequestFilter
+	if _, err := chromedp.Run(ctx, chromedp.Func(func(ctx context.Context, target *chromedp.Target) error {
+		var setupErr error
+		filter, setupErr = installPreviewFilter(ctx, target, origin, cancel)
+		return setupErr
+	})); err != nil {
+		return nil, "", fmt.Errorf("cannot install preview request filter: %w", err)
+	}
+	defer func() {
+		if filterErr := filter.close(); filterErr != nil {
+			image = nil
+			title = ""
+			err = filterErr
+		}
+	}()
+
 	if _, err := chromedp.Run(ctx, chromedp.Func(func(ctx context.Context, target *chromedp.Target) error {
 		eventCtx, cancel := context.WithCancel(ctx)
 		defer cancel()
@@ -248,11 +273,18 @@ func capture(browser context.Context, url string) ([]byte, string, error) {
 	if _, err := chromedp.Run(ctx, chromedp.Sleep(700*time.Millisecond)); err != nil {
 		return nil, "", err
 	}
-	title, err := chromedp.Run(ctx, chromedp.Title())
+	location, err := chromedp.Run(ctx, chromedp.Location())
 	if err != nil {
 		return nil, "", err
 	}
-	image, err := chromedp.Run(ctx, chromedp.Action[[]byte](func(ctx context.Context, t *chromedp.Target) ([]byte, error) {
+	if !origin.allows(location) {
+		return nil, "", errPreviewNavigationBlocked
+	}
+	title, err = chromedp.Run(ctx, chromedp.Title())
+	if err != nil {
+		return nil, "", err
+	}
+	image, err = chromedp.Run(ctx, chromedp.Action[[]byte](func(ctx context.Context, t *chromedp.Target) ([]byte, error) {
 		quality := int64(65)
 		result, err := cdp.Call(ctx, t, page.CaptureScreenshot, page.CaptureScreenshotParams{Format: page.CaptureScreenshotFormatJpeg, Quality: &quality})
 		return result.Data, err

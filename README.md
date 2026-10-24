@@ -60,7 +60,7 @@ Use the ARM64 archive on ARM machines. Unauthenticated installer downloads requi
 
 bndr is a Go application with its dashboard embedded in a single binary. Running a built binary does not require Go or Node.js. Linux is required for socket discovery.
 
-Build with Go 1.25 or newer:
+Build with Go 1.26.10 or newer (the pinned toolchain is Go 1.27.3):
 
 ```sh
 make build
@@ -97,6 +97,7 @@ Within a few seconds, the dashboard links to `http://192.168.1.50:8765`. bndr bi
 | `BNDR_PORT` | `4000` | Dashboard port |
 | `BNDR_EXCLUDE` | Empty | Comma-separated ports to skip, e.g. `8080,9090` |
 | `BNDR_DATA_DIR` | `$XDG_STATE_HOME/bndr` or `~/.local/state/bndr` | Directory containing persistent app settings |
+| `BNDR_PREVIEWS` | Enabled | Set to `0` to disable screenshot browsing entirely |
 | `BNDR_CHROMIUM` | Auto-detected | Path to a Chromium or Chrome executable for thumbnails |
 | `BNDR_CHROMIUM_NO_SANDBOX` | Unset | Set to `1` only in an isolated environment where Chromium sandboxing is unavailable |
 
@@ -134,9 +135,19 @@ HTML apps get cached JPEG screenshots captured on the dev machine, with one shar
 
 bndr reads `/proc/net/tcp` and `/proc/net/tcp6` in its current network namespace and probes HTTP `/` with a one-second timeout every three seconds. Any HTTP response qualifies, including login pages and errors. It does not depend on which agent or terminal started the process. Apps are automatically named from their HTML page title, including client-rendered titles once a preview is captured. Apps without titles fall back to a port label. The dashboard does not depend on agent-specific integration.
 
+The dashboard and bndr-managed bridges accept only their configured LAN IP and port in the HTTP Host header. Access through custom DNS names, reverse proxies that preserve a different Host, or the wrong port is rejected. This limits DNS rebinding; it does not authenticate LAN clients. Already-public apps linked directly by bndr retain their own security behavior.
+
+Screenshot requests are filtered to the captured app’s exact scheme, literal IP address, and port. Other ports, hostnames, external sites, off-origin redirects, and off-origin frame/resource requests are blocked. A preview-only Content Security Policy also restricts connections and disables workers, popups, forms, plugins, and downloads. The app’s existing enforcing CSP is retained. These restrictions do not change the app served through its normal LAN link.
+
+Local scripts, styles, images, and same-origin API calls can render. External CDNs, APIs, fonts, embedded sites, worker-dependent rendering, and login redirects to another origin may be absent or fail in thumbnails. Each intercepted document is limited to 8 MiB, and captures fail rather than proceeding without the filter if setup or interception fails.
+
+This is browser-level request filtering, not an OS-enforced network sandbox. It does not contain browser exploits or provide complete control over browser-internal networking or protocols such as WebRTC. For untrusted app content, use `BNDR_PREVIEWS=0` or stronger network isolation; keep Chromium sandboxing enabled when previews are used.
+
 **Use on a trusted LAN:** bndr automatically exposes discovered HTTP services, including development admin endpoints, without adding authentication. Use `BNDR_EXCLUDE` for ports you want kept local. It does not modify firewall rules or assign IP addresses.
 
 HTTPS-only services, Unix sockets, other network namespaces and containers without published host ports are outside this first version. IPv6 loopback and wildcard listeners are probed over IPv6 and bridged to IPv4 when possible. Servers with custom Host/Origin checks, hardcoded localhost URLs, secure cookies, absolute redirects or hardcoded WebSocket URLs may need app configuration. HTTP Host is forwarded as `localhost:<port>`; Origin is preserved. Network discovery itself makes a GET request to `/` on candidate ports.
+
+See the [security audit](docs/security-audit-2026-10-24.md) for verified findings and the status of local fixes versus published releases.
 
 Stop with Ctrl+C to close the dashboard and all bridges. For persistent operation, run the same command under your preferred service manager with a fixed `BNDR_HOST`.
 
@@ -148,7 +159,7 @@ go test -race ./...
 go vet ./...
 ```
 
-Tests cover Linux socket parsing, HTTP forwarding, upgrade tunneling, title parsing, concurrent preference updates, persistence across restart, hide/restore including offline entries, API validation, real screenshot capture, checksum failure, installer upgrades, online release selection, user-service generation, uninstall preservation, theme persistence, and keeping keyboard focus and drafts intact during dashboard polling. The real screenshot integration test runs when Chromium is available and otherwise reports a skip. The screenshot test disables the browser sandbox for compatibility with isolated CI environments; normal operation uses Chromium’s default sandbox.
+Tests cover Linux socket parsing, HTTP forwarding, upgrade tunneling, title parsing, concurrent preference updates, persistence across restart, hide/restore including offline entries, API validation, real screenshot capture, checksum failure, installer upgrades, online release selection, user-service generation, uninstall preservation, theme persistence, preview origin boundaries and redirect blocking, worker/popup restrictions, compressed and oversized preview documents, and keeping keyboard focus and drafts intact during dashboard polling. The real screenshot integration test runs when Chromium is available and otherwise reports a skip. The screenshot test disables the browser sandbox for compatibility with isolated CI environments; normal operation uses Chromium’s default sandbox.
 
 ## Migration from Node
 

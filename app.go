@@ -167,8 +167,11 @@ func (a *application) Close() {
 	a.previews.Close()
 }
 func (a *application) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Cache-Control", "no-store")
-	w.Header().Set("X-Content-Type-Options", "nosniff")
+	dashboardHeaders(w)
+	if !validHost(r.Host, a.lan, a.port) {
+		http.Error(w, "Host not allowed; use the configured LAN IP address", http.StatusForbidden)
+		return
+	}
 	if r.URL.Path == "/api/apps" && r.Method == http.MethodGet {
 		a.mu.RLock()
 		apps := slices.Clone(a.apps)

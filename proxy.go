@@ -68,11 +68,15 @@ func newBridge(lan, host string, port int) (*bridge, error) {
 		},
 	}
 	b.server = &http.Server{Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !validHost(r.Host, lan, port) {
+			http.Error(w, "Host not allowed; use the configured LAN IP address", http.StatusForbidden)
+			return
+		}
 		if r.Header.Get("Upgrade") != "" {
 			w = upgradeWriter{w}
 		}
 		proxy.ServeHTTP(w, r)
-	}), ReadHeaderTimeout: 10 * time.Second}
+	}), ReadHeaderTimeout: 10 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 64 << 10}
 	go b.server.Serve(bridgeListener{listener, b})
 	return b, nil
 }

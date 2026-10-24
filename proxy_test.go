@@ -66,7 +66,7 @@ func TestBridgeHTTPStreamingAndWebSockets(t *testing.T) {
 	}
 	defer conn.Close()
 	conn.SetDeadline(time.Now().Add(3 * time.Second))
-	fmt.Fprint(conn, "GET /hot HTTP/1.1\r\nHost: localhost\r\nConnection: Upgrade\r\nUpgrade: websocket\r\n\r\nping")
+	fmt.Fprintf(conn, "GET /hot HTTP/1.1\r\nHost: 127.0.0.2:%d\r\nConnection: Upgrade\r\nUpgrade: websocket\r\n\r\nping", port)
 	reader := bufio.NewReader(conn)
 	status, _ := reader.ReadString('\n')
 	if !strings.Contains(status, "101") {

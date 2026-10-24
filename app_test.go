@@ -15,6 +15,7 @@ import (
 func api(t *testing.T, a *application, method, path, body string) *httptest.ResponseRecorder {
 	t.Helper()
 	req := httptest.NewRequest(method, path, bytes.NewBufferString(body))
+	req.Host = fmt.Sprintf("%s:%d", a.lan, a.port)
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, req)
@@ -86,6 +87,7 @@ func TestDiscoverySettingsAndOfflineRestore(t *testing.T) {
 		}
 	}
 	req := httptest.NewRequest("PATCH", path, bytes.NewBufferString(`{"hidden":false}`))
+	req.Host = fmt.Sprintf("%s:%d", a.lan, a.port)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Origin", "http://unrelated.example")
 	w := httptest.NewRecorder()

@@ -67,3 +67,36 @@ func TestDashboardThemeAndPolling(t *testing.T) {
 	check(`document.documentElement.scrollWidth<=innerWidth`)
 	check(`(()=>{const input=document.querySelector('#filter');input.value='does not match';input.dispatchEvent(new Event('input'));return document.querySelector('.empty h2').textContent==='No matching apps';})()`)
 }
+
+func TestDashboardContentSecurityPolicy(t *testing.T) {
+	executable := findChromium()
+	if executable == "" {
+		t.Skip("install Chromium for dashboard browser tests")
+	}
+	t.Setenv("BNDR_PREVIEWS", "0")
+	prefs, err := loadPreferences(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	a := newApplication(context.Background(), "127.0.0.1", 4000, nil, prefs)
+	defer a.Close()
+	server := httptest.NewServer(a)
+	defer server.Close()
+	a.port = localPort(t, server)
+	parent, deadline := context.WithTimeout(context.Background(), 30*time.Second)
+	defer deadline()
+	allocator, closeAllocator := chromedp.NewExecAllocator(parent, append(chromedp.DefaultExecAllocatorOptions[:], chromedp.ExecPath(executable), chromedp.NoSandbox)...)
+	defer closeAllocator()
+	browser, closeBrowser := chromedp.NewContext(allocator)
+	defer closeBrowser()
+	if _, err := chromedp.Run(browser, chromedp.Navigate(server.URL)); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := chromedp.Run(browser, chromedp.Poll[bool](`document.querySelector('#status').textContent==='Watching'`)); err != nil {
+		t.Fatal("CSP blocked dashboard startup:", err)
+	}
+	ok, err := chromedp.Run(browser, chromedp.Evaluate[bool](`(()=>{const theme=document.querySelector('#theme');theme.value='dark';theme.dispatchEvent(new Event('change'));return document.documentElement.dataset.theme==='dark' && getComputedStyle(document.body).backgroundColor==='rgb(24, 24, 27)';})()`))
+	if err != nil || !ok {
+		t.Fatalf("CSP blocked theme scripts or styles: %v", err)
+	}
+}
