@@ -2,7 +2,7 @@
 
 A lightweight Linux dashboard that makes local HTTP development servers available on your LAN. Start an app from Claude Code, Codex, a terminal, or any other tool; bndr discovers the listening socket and adds a link to the dashboard.
 
-![bndr dashboard showing local apps, screenshot previews, and the theme selector](docs/images/dashboard.png)
+![bndr dashboard with fictional apps, mock previews, and example IP addresses](docs/images/dashboard.png)
 
 ## Install a published release
 
