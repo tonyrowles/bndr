@@ -198,3 +198,11 @@ Tags such as `v0.2.0-rc.1` create prereleases, which the default installer skips
 ## License
 
 [MIT](LICENSE) © 2026 Tony Rowles.
+
+## Security and use at your own risk
+
+**bndr is intended for development on trusted networks. Use it at your own risk.** It automatically makes discovered local web services reachable by other allowed clients, including services that may expose administrative actions, source code, or secrets. bndr adds no user authentication or HTTPS. Anyone permitted by the network restrictions can access the dashboard, change app settings, and reach bridged apps unless those apps enforce their own authentication.
+
+The default subnet restriction limits source IPs; it does not establish that a client is trustworthy. Hiding a card does not restrict access. Review which services you expose, exclude sensitive ports with `BNDR_EXCLUDE`, and use firewall rules. Do not expose bndr to the public internet. Apps already listening directly on the network retain their own access controls.
+
+Preview capture runs app content in Chromium. Its request filtering is not an OS network sandbox; disable previews with `BNDR_PREVIEWS=0` when serving untrusted content. bndr is provided without warranty under the [MIT license](LICENSE).
