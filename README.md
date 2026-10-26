@@ -194,3 +194,7 @@ git push origin v0.2.0
 ```
 
 Tags such as `v0.2.0-rc.1` create prereleases, which the default installer skips. A specific prerelease can be installed with `--version`. The default online installer requires a stable release in a public repository; use the authenticated download method above for a private repository.
+
+## License
+
+[MIT](LICENSE) © 2026 Tony Rowles.

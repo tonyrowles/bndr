@@ -22,7 +22,7 @@ go mod download
 } > "$work/THIRD_PARTY_NOTICES.txt"
 for arch in amd64 arm64; do
     CGO_ENABLED=0 GOOS=linux GOARCH=$arch go build -trimpath -ldflags "-s -w -X main.version=$version" -o "$work/bndr" .
-    tar -czf "dist/bndr_linux_$arch.tar.gz" -C "$work" bndr THIRD_PARTY_NOTICES.txt -C "$PWD" README.md
+    tar -czf "dist/bndr_linux_$arch.tar.gz" -C "$work" bndr THIRD_PARTY_NOTICES.txt -C "$PWD" README.md LICENSE
 done
 cp install.sh dist/install.sh
 (cd dist && sha256sum bndr_linux_amd64.tar.gz bndr_linux_arm64.tar.gz install.sh > SHA256SUMS)
